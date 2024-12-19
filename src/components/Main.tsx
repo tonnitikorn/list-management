@@ -93,42 +93,60 @@ const App: React.FC = () => {
     const handleOnDragEnd = (result: any) => {
         const { source, destination } = result;
 
-        if (!destination) return;
+        if (!destination) return; 
 
         if (source.droppableId === destination.droppableId && source.index === destination.index) {
-            return;
+            return; 
         }
 
         const sourceListId = parseInt(source.droppableId, 10);
         const destinationListId = parseInt(destination.droppableId, 10);
+        const cardId = lists[sourceListId]?.cards[source.index]?.id;
 
-        const sourceList = lists.find((list) => list.id === sourceListId);
-        const card = sourceList?.cards[source.index];
-
-        if (card) {
+        if (cardId !== undefined) {
             dispatch(
                 moveCard({
                     sourceListId,
                     targetListId: destinationListId,
-                    cardId: card.id,
+                    cardId,
                 })
             );
         }
     };
 
+    const getCategoryCounts = () => {
+        const counts: { [key: string]: number } = {};
+        filteredLists.forEach((list) => {
+            list.cards.forEach((card) => {
+                card.categories.forEach((category: string) => {
+                    counts[category] = (counts[category] || 0) + 1;
+                });
+            });
+        });
+        return counts;
+    };
 
+    const categoryCounts = getCategoryCounts(); 
 
     return (
         <div className="min-h-screen bg-gray-100 p-8">
             <h1 className="text-2xl font-bold mb-4">Todo List</h1>
 
-            {/* Search Input */}
             <Input
                 placeholder="Search by title or description"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="mb-6"
             />
+
+            <div className="mb-6">
+                <h3 className="font-semibold text-lg">Task Counts by Category</h3>
+                {categories.map((category) => (
+                    <div key={category} className="text-sm text-gray-600">
+                        {category}: {categoryCounts[category] || 0} tasks
+                    </div>
+                ))}
+            </div>
 
             <DragDropContext onDragEnd={handleOnDragEnd}>
                 <div className="flex gap-4">
@@ -221,7 +239,6 @@ const App: React.FC = () => {
                 </Form>
             </Modal>
 
-            {/* Toaster */}
             <Toaster />
         </div>
     );
